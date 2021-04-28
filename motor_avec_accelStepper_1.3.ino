@@ -22,37 +22,50 @@ bool PM ;
 //Objects
 DS3231 clock;
 
+// Bouton de calibrage
+int triggerCalibragePin = 3;
+
 // Motor pin definitions
 #define mtrPin1  8     // IN1 on the ULN2003 driver 1
 #define mtrPin2  9     // IN2 on the ULN2003 driver 1
 #define mtrPin3  10     // IN3 on the ULN2003 driver 1
 #define mtrPin4  11     // IN4 on the ULN2003 driver 1
-#define speed -2000
+#define speed -1000
+#define stepPerRound 10178 // nombre de pas pour 1 tour
+#define angleMini -5089 // angle d'une portion de tour
+#define nbAngles 4
+
 AccelStepper stepper(HALFSTEP, mtrPin1, mtrPin2, mtrPin3, mtrPin4);
 
 int opticalSwitch;
 
-void distribute() {
-  stepper.setCurrentPosition(0);
-  Serial.println("début versement croquettes"); 
-  stepper.setSpeed(speed);
-  Serial.println("Initialisation position");
-  while(stepper.currentPosition() != -600) // positionnement 
-  {
-    stepper.runSpeed();
-  }
-  stepper.setCurrentPosition(0);
-  Serial.println("Distribution croquettes");
-
-  stepper.setSpeed(speed);
+void calibrate() {
+  Serial.println("début calibrage position moteur"); 
   opticalSwitch = analogRead(A0);
+  stepper.setSpeed(speed);
   while(opticalSwitch > 110)
   {
     stepper.runSpeed();
     opticalSwitch = analogRead(A0);
   }
-  Serial.println("Fin versement croquettes");
-  
+  stepper.setCurrentPosition(0);
+  Serial.println("fin calibrage position moteur"); 
+  digitalWrite(mtrPin1,LOW);
+  digitalWrite(mtrPin2,LOW);     
+  digitalWrite(mtrPin3,LOW);   
+  digitalWrite(mtrPin4,LOW); 
+  return;
+}
+
+void distribute() {
+  stepper.setCurrentPosition(0);
+  Serial.println("début versement croquettes"); 
+  stepper.setSpeed(speed);
+  while(stepper.currentPosition() != angleMini) // positionnement 
+  {
+    stepper.runSpeed();
+  }
+
   return;
 }
 
@@ -70,6 +83,7 @@ void alarmFunction()
 }
 
 void setup() {
+  pinMode(triggerCalibragePin, INPUT_PULLUP);
   Serial.begin(9600);
   Serial.println("------------------------------------");
   Serial.println("------  Croquette distributor   ----");
@@ -90,6 +104,11 @@ void setup() {
 void loop() {
   setDate();
   readRTC();
+  // on regarde si il y a un clibrage
+  if(digitalRead(triggerCalibragePin) == LOW){
+    calibrate();
+  }
+  
   if (isAlarm)
   {
     Serial.println("Alarm detectee");
@@ -98,7 +117,7 @@ void loop() {
    
   } 
 
-  delay(5000); 
+  delay(1000); 
 }
 
 void readRTC( ) { /* function readRTC */
