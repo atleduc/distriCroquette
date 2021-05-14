@@ -69,16 +69,10 @@ void distribute() {
   return;
 }
 
+
 void alarmFunction()
 {
   Serial.println("*** INT 0 ***");
-  distribute();
-  //stop the motor
-  digitalWrite(mtrPin1,LOW);
-  digitalWrite(mtrPin2,LOW);     
-  digitalWrite(mtrPin3,LOW);   
-  digitalWrite(mtrPin4,LOW); 
-  Serial.print("distibution à : ");Serial.println(clock.dateFormat("d-m-Y H:i:s", dt));
   isAlarm = true;
 }
 
@@ -109,12 +103,17 @@ void loop() {
     calibrate();
   }
   
-  if (isAlarm)
-  {
+  if (isAlarm) {
     Serial.println("Alarm detectee");
     isAlarm = false;
+    distribute();
+    //stop the motor
+    digitalWrite(mtrPin1,LOW);
+    digitalWrite(mtrPin2,LOW);     
+    digitalWrite(mtrPin3,LOW);   
+    digitalWrite(mtrPin4,LOW); 
+    Serial.print("distibution à : ");Serial.println(clock.dateFormat("d-m-Y H:i:s", dt));
     clock.clearAlarm1();
-   
   } 
 
   delay(1000); 
