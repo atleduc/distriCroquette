@@ -32,7 +32,8 @@ int triggerCalibragePin = 3;
 #define mtrPin4  11     // IN4 on the ULN2003 driver 1
 #define speed -1000
 #define stepPerRound 10178 // nombre de pas pour 1 tour
-#define angleMini -5089 // angle d'une portion de tour
+#define angleMini -2544 // angle d'une portion de tour
+#define nbPortion 1 // nombre de portions distribuées
 #define nbAngles 4
 
 AccelStepper stepper(HALFSTEP, mtrPin1, mtrPin2, mtrPin3, mtrPin4);
@@ -43,7 +44,7 @@ void calibrate() {
   Serial.println("début calibrage position moteur"); 
   opticalSwitch = analogRead(A0);
   stepper.setSpeed(speed);
-  while(opticalSwitch > 110)
+  while(opticalSwitch > 110 || digitalRead(triggerCalibragePin) == LOW)
   {
     stepper.runSpeed();
     opticalSwitch = analogRead(A0);
@@ -61,7 +62,7 @@ void distribute() {
   stepper.setCurrentPosition(0);
   Serial.println("début versement croquettes"); 
   stepper.setSpeed(speed);
-  while(stepper.currentPosition() != angleMini) // positionnement 
+  while(stepper.currentPosition() != (angleMini*nbPortion)) // positionnement 
   {
     stepper.runSpeed();
   }
