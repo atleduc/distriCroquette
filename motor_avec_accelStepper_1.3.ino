@@ -39,6 +39,14 @@ int triggerCalibragePin = 3;
 AccelStepper stepper(HALFSTEP, mtrPin1, mtrPin2, mtrPin3, mtrPin4);
 
 int opticalSwitch;
+// moments de distribution
+int Heure1 = 8;
+int Minute1 = 30;
+int Seconde1 = 30;
+int Heure2 = 18;
+int Minute2 = 30;
+int Seconde2 = 00;
+int currentAlarm = 1;
 
 void calibrate() {
   Serial.println("début calibrage position moteur"); 
@@ -78,6 +86,7 @@ void alarmFunction()
 }
 
 void setup() {
+  
   pinMode(triggerCalibragePin, INPUT_PULLUP);
   Serial.begin(9600);
   Serial.println("------------------------------------");
@@ -85,15 +94,18 @@ void setup() {
   stepper.setMaxSpeed(2000.0);
   stepper.setAcceleration(2000.0);  //Make the acc quick
   stepper.setSpeed(2000);
-
+  Wire.begin();
   Serial.println(F("Initialize System"));
   clock.armAlarm1(false);
   clock.armAlarm2(false);
   clock.clearAlarm1();
   clock.clearAlarm2();
-  clock.setAlarm1(0, 0, 0, 10, DS3231_MATCH_S);
+  clock.setAlarm1(0, Heure1, Minute1, Seconde1, DS3231_MATCH_S);
+//  clock.setAlarm1(0, 8, 30, 0, DS3231_MATCH_H_M_S);
+  //clock.setAlarm2(0, 0, 45, DS3231_MATCH_M);
+//  clock.setAlarm2(0, 18, 30, DS3231_MATCH_H_M);
   attachInterrupt(0, alarmFunction, FALLING);
-  Wire.begin();
+  
 }
 
 void loop() {
@@ -108,13 +120,21 @@ void loop() {
     Serial.println("Alarm detectee");
     isAlarm = false;
     distribute();
+    // set next alarm
+    if (currentAlarm == 1) {
+      currentAlarm = 2;
+      clock.setAlarm1(0, Heure2, Minute2, Seconde2, DS3231_MATCH_S);
+    } else {
+      currentAlarm = 1;
+      clock.setAlarm1(0, Heure1, Minute1, Seconde1, DS3231_MATCH_S);
+    }
+    
     //stop the motor
     digitalWrite(mtrPin1,LOW);
     digitalWrite(mtrPin2,LOW);     
     digitalWrite(mtrPin3,LOW);   
     digitalWrite(mtrPin4,LOW); 
-    Serial.print("distibution à : ");Serial.println(clock.dateFormat("d-m-Y H:i:s", dt));
-    clock.clearAlarm1();
+    Serial.print("distibution à : ");Serial.println(clock.dateFormat("d-m-Y H:i:s", dt)); 
   } 
 
   delay(1000); 
@@ -140,7 +160,7 @@ void GetDateStuff(byte& Year, byte& Month, byte& Day, byte& DoW, byte& Hour, byt
  ////Get date data
  // Call this if you notice something coming in on
  // the serial port. The stuff coming in should be in
- // the order YYMMDDwHHMMSS, with an 'x' at the end.
+ // the order YYMMDDwHHMMSS, with an 'x' at the end. Ex. 210308w214400x
  boolean GotString = false;
  char InChar;
  byte Temp1, Temp2;
