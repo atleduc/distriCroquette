@@ -163,7 +163,7 @@ void GetDateStuff(byte& Year, byte& Month, byte& Day, byte& DoW, byte& Hour, byt
  ////Get date data
  // Call this if you notice something coming in on
  // the serial port. The stuff coming in should be in
- // the order YYYYMMDDwHHMMSS, with an 'x' at the end. Ex. 210308w214400x
+ // the order YYYYMMDDwHHMMSS, with an 'x' at the end. Ex. 20220714w081400x
  boolean GotString = false;
  char InChar;
  byte Temp1, Temp2, Temp3, Temp4;
