@@ -1,4 +1,4 @@
-#include <DS3231.h>
+#include <DS3231.h> //https://github.com/jarzebski
 
 #include <AccelStepper.h>
 #define HALFSTEP 8  //Half-step mode (8 step control signal sequence)
@@ -41,10 +41,11 @@ AccelStepper stepper(HALFSTEP, mtrPin1, mtrPin2, mtrPin3, mtrPin4);
 int opticalSwitch;
 // moments de distribution
 int Heure1 = 8;
-int Minute1 = 30;
-int Seconde1 = 30;
+int Minute1 = 15;
+int Seconde1 = 00;
+
 int Heure2 = 18;
-int Minute2 = 30;
+int Minute2 = 20;
 int Seconde2 = 00;
 int currentAlarm = 1;
 
@@ -100,15 +101,16 @@ void setup() {
   clock.armAlarm2(false);
   clock.clearAlarm1();
   clock.clearAlarm2();
-  clock.setAlarm1(0, Heure1, Minute1, Seconde1, DS3231_MATCH_S);
+  clock.setAlarm1(0, Heure1, Minute1, Seconde1, DS3231_MATCH_H_M_S);
 //  clock.setAlarm1(0, 8, 30, 0, DS3231_MATCH_H_M_S);
   //clock.setAlarm2(0, 0, 45, DS3231_MATCH_M);
 //  clock.setAlarm2(0, 18, 30, DS3231_MATCH_H_M);
   attachInterrupt(0, alarmFunction, FALLING);
-  
+ 
 }
 
 void loop() {
+  RTCAlarmTime alarm;
   setDate();
   readRTC();
   // on regarde si il y a un clibrage
@@ -123,10 +125,10 @@ void loop() {
     // set next alarm
     if (currentAlarm == 1) {
       currentAlarm = 2;
-      clock.setAlarm1(0, Heure2, Minute2, Seconde2, DS3231_MATCH_S);
+      clock.setAlarm1(0, Heure2, Minute2, Seconde2, DS3231_MATCH_H_M_S);
     } else {
       currentAlarm = 1;
-      clock.setAlarm1(0, Heure1, Minute1, Seconde1, DS3231_MATCH_S);
+      clock.setAlarm1(0, Heure1, Minute1, Seconde1, DS3231_MATCH_H_M_S);
     }
     
     //stop the motor
@@ -136,8 +138,9 @@ void loop() {
     digitalWrite(mtrPin4,LOW); 
     Serial.print("distibution à : ");Serial.println(clock.dateFormat("d-m-Y H:i:s", dt)); 
   } 
-
-  delay(1000); 
+  alarm=clock.getAlarm1();
+  Serial.print("prochaine distibution à : ");Serial.println(clock.dateFormat("H:i:s", alarm)); 
+  delay(250); 
 }
 
 void readRTC( ) { /* function readRTC */
@@ -160,10 +163,10 @@ void GetDateStuff(byte& Year, byte& Month, byte& Day, byte& DoW, byte& Hour, byt
  ////Get date data
  // Call this if you notice something coming in on
  // the serial port. The stuff coming in should be in
- // the order YYMMDDwHHMMSS, with an 'x' at the end. Ex. 210308w214400x
+ // the order YYYYMMDDwHHMMSS, with an 'x' at the end. Ex. 210308w214400x
  boolean GotString = false;
  char InChar;
- byte Temp1, Temp2;
+ byte Temp1, Temp2, Temp3, Temp4;
  char InString[20];
  byte j = 0;
  while (!GotString) {
@@ -180,27 +183,31 @@ void GetDateStuff(byte& Year, byte& Month, byte& Day, byte& DoW, byte& Hour, byt
  // Read Year first
  Temp1 = (byte)InString[0] - 48;
  Temp2 = (byte)InString[1] - 48;
- Year = Temp1 * 10 + Temp2;
+ Temp3 = (byte)InString[2] - 48;
+ Temp4 = (byte)InString[3] - 48;
+ Year = Temp1 * 1000 + Temp2 * 100 + Temp3 * 10 + Temp4;
+  Serial.print("Year ");
+  Serial.println(Year);
  // now month
- Temp1 = (byte)InString[2] - 48;
- Temp2 = (byte)InString[3] - 48;
- Month = Temp1 * 10 + Temp2;
- // now date
  Temp1 = (byte)InString[4] - 48;
  Temp2 = (byte)InString[5] - 48;
+ Month = Temp1 * 10 + Temp2;
+ // now date
+ Temp1 = (byte)InString[6] - 48;
+ Temp2 = (byte)InString[7] - 48;
  Day = Temp1 * 10 + Temp2;
  // now Day of Week
- DoW = (byte)InString[6] - 48;
+ DoW = (byte)InString[8] - 48;
  // now Hour
- Temp1 = (byte)InString[7] - 48;
- Temp2 = (byte)InString[8] - 48;
- Hour = Temp1 * 10 + Temp2;
- // now Minute
  Temp1 = (byte)InString[9] - 48;
  Temp2 = (byte)InString[10] - 48;
- Minute = Temp1 * 10 + Temp2;
- // now Second
+ Hour = Temp1 * 10 + Temp2;
+ // now Minute
  Temp1 = (byte)InString[11] - 48;
  Temp2 = (byte)InString[12] - 48;
+ Minute = Temp1 * 10 + Temp2;
+ // now Second
+ Temp1 = (byte)InString[13] - 48;
+ Temp2 = (byte)InString[14] - 48;
  Second = Temp1 * 10 + Temp2;
 }
