@@ -46,7 +46,7 @@ int triggerCalibragePin = 3;
 #define stepPerRound 10178 // nombre de pas pour 1 tour
 #define angleMini -2544 // angle d'une portion de tour
 #define nbPortion 1 // nombre de portions distribuées
-#define nbAngles 4
+
 
 AccelStepper stepper(HALFSTEP, mtrPin1, mtrPin2, mtrPin3, mtrPin4);
 
@@ -56,9 +56,14 @@ int Heure1 = 8;
 int Minute1 = 15;
 int Seconde1 = 00;
 
-int Heure2 = 18;
-int Minute2 = 20;
+int Heure2 = 13;
+int Minute2 = 10;
 int Seconde2 = 00;
+
+int Heure3 = 18;
+int Minute3 = 00;
+int Seconde3 = 00;
+
 int currentAlarm = 1;
 
 void calibrate() {
@@ -81,6 +86,7 @@ void calibrate() {
 }
 
 void distribute() {
+  lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Distribution");
   lcd.setCursor(0, 1);
@@ -147,9 +153,13 @@ void loop() {
     if (currentAlarm == 1) {
       currentAlarm = 2;
       clock.setAlarm1(0, Heure2, Minute2, Seconde2, DS3231_MATCH_H_M_S);
+    } else if (currentAlarm == 2){
+      currentAlarm = 3;
+      clock.setAlarm1(0, Heure3, Minute3, Seconde3, DS3231_MATCH_H_M_S);
     } else {
       currentAlarm = 1;
       clock.setAlarm1(0, Heure1, Minute1, Seconde1, DS3231_MATCH_H_M_S);
+      
     }
 
     //stop the motor
@@ -157,12 +167,12 @@ void loop() {
     digitalWrite(mtrPin2, LOW);
     digitalWrite(mtrPin3, LOW);
     digitalWrite(mtrPin4, LOW);
-    Serial.print("distibution : "); Serial.println(clock.dateFormat("d-m-Y H:i:s", dt));
+    Serial.print("distibution : "); Serial.println(clock.dateFormat("d/m H:i:s", dt));
   }
   alarm = clock.getAlarm1();
   Serial.print("distibution à: "); Serial.println(clock.dateFormat("H:i:s", alarm));
   lcd.setCursor(0, 0);
-  lcd.print(clock.dateFormat("d-m-Y H:i:s", dt));
+  lcd.print(clock.dateFormat("d/m H:i:s", dt));
   lcd.setCursor(6, 1);
   lcd.write((byte)0);
   lcd.setCursor(8, 1);
